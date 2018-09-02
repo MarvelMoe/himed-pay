@@ -1,25 +1,41 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import Checkout from './Checkout';
-import './App.css';
+import React from 'react'
+import axios from 'axios';
+import StripeCheckout from 'react-stripe-checkout';
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h2>Welcome to React</h2>
-        </div>
-        <p className="App-intro">
-          <Checkout
-            name={'The Himed Payment System'}
-            amount={1}
-          />
-        </p>
-      </div>
-    );
-  }
-}
+import STRIPE_PUBLISHABLE from './constants/stripe';
+import PAYMENT_SERVER_URL from './constants/server';
 
-export default App;
+const CURRENCY = 'USD';
+
+const fromEuroToCent = amount => amount * 100;
+
+const successPayment = data => {
+  alert('Payment Was Successful');
+};
+
+const errorPayment = data => {
+  alert('Payment Error');
+};
+
+const onToken = (amount, description) => token =>
+  axios.post(PAYMENT_SERVER_URL,
+    {
+      description,
+      source: token.id,
+      currency: CURRENCY,
+      amount: fromEuroToCent(amount)
+    })
+    .then(successPayment)
+    .catch(errorPayment);
+
+const Checkout = ({ name, description, amount }) =>
+  <StripeCheckout
+    name={name}
+    description={description}
+    amount={fromEuroToCent(amount)}
+    token={onToken(amount, description)}
+    currency={CURRENCY}
+    stripeKey={STRIPE_PUBLISHABLE}
+  />
+
+export default Checkout;
